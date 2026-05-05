@@ -4,7 +4,7 @@ import {
   getCertificates,
   updateCertificate,
 } from '../../api/certificatesAPI'
-import { uploadPublicFile } from '../../utils/storageUpload'
+import { uploadThumbnail } from '../../api/adminAPI'
 import AdminCrudPage from './AdminCrudPage'
 import {
   inputClassName,
@@ -113,7 +113,10 @@ function CertificatesPage() {
         let thumbnailUrl = data.thumbnail_url
 
         if (data.thumbnail_file) {
-          thumbnailUrl = await uploadPublicFile('thumbnails', data.thumbnail_file, 'certificate')
+          const uploadFormData = new FormData()
+          uploadFormData.append('thumbnail', data.thumbnail_file)
+          const uploadResult = await uploadThumbnail(uploadFormData)
+          thumbnailUrl = uploadResult.url
         }
 
         return {

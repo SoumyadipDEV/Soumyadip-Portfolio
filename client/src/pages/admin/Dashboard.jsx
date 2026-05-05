@@ -43,6 +43,7 @@ const formatReceivedAt = (value) => {
   }).format(date)
 }
 
+/** Admin landing page with portfolio counts and unread message preview. */
 function Dashboard() {
   const { user } = useAuth()
   const [stats, setStats] = useState({

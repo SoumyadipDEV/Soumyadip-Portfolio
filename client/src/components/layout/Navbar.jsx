@@ -1,16 +1,20 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { FiDownload, FiMenu, FiMoon, FiSun, FiX } from 'react-icons/fi'
+import toast from 'react-hot-toast'
 
 import { useTheme } from '../../hooks/useTheme'
+import { downloadLatestResume } from '../../utils/resumeDownload'
 import { publicNavLinks } from '../../utils/navigationLinks'
 import Button from '../common/Button'
 
+/** Fixed public navigation with active-section tracking and resume download action. */
 function Navbar({ personalInfo }) {
   const { isDark, toggleTheme } = useTheme()
   const [activeSection, setActiveSection] = useState('')
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,7 +62,18 @@ function Navbar({ personalInfo }) {
   }, [])
 
   const developerName = personalInfo?.full_name || 'Portfolio'
-  const resumeUrl = personalInfo?.resume_url || '#'
+  const handleResumeDownload = async () => {
+    setDownloading(true)
+
+    try {
+      await downloadLatestResume()
+      setIsDrawerOpen(false)
+    } catch (error) {
+      toast.error(error.message || 'Unable to download resume')
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   const getLinkClassName = (id) =>
     [
@@ -105,15 +120,9 @@ function Navbar({ personalInfo }) {
           >
             {isDark ? <FiSun aria-hidden="true" /> : <FiMoon aria-hidden="true" />}
           </Button>
-          <Button
-            as="a"
-            href={resumeUrl}
-            rel="noreferrer"
-            target={resumeUrl === '#' ? undefined : '_blank'}
-            variant="outline"
-          >
+          <Button disabled={downloading} onClick={handleResumeDownload} variant="outline">
             <FiDownload aria-hidden="true" />
-            Download Resume
+            {downloading ? 'Preparing Resume' : 'Download Resume'}
           </Button>
         </div>
 
@@ -173,16 +182,13 @@ function Navbar({ personalInfo }) {
               </div>
 
               <Button
-                as="a"
                 className="mt-auto"
-                href={resumeUrl}
-                onClick={() => setIsDrawerOpen(false)}
-                rel="noreferrer"
-                target={resumeUrl === '#' ? undefined : '_blank'}
+                disabled={downloading}
+                onClick={handleResumeDownload}
                 variant="outline"
               >
                 <FiDownload aria-hidden="true" />
-                Download Resume
+                {downloading ? 'Preparing Resume' : 'Download Resume'}
               </Button>
             </motion.aside>
           </>

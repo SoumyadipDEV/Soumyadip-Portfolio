@@ -56,6 +56,4 @@ app.use((req, res, next) => {
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Portfolio API listening on port ${PORT}`);
-});
+app.listen(PORT);

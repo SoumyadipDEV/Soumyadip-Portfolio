@@ -6,6 +6,7 @@ import Button from '../../components/common/Button'
 import Loader from '../../components/common/Loader'
 import { useAuth } from '../../hooks/useAuth'
 
+/** Supabase-backed admin sign-in screen. */
 function Login() {
   const { loading, login, session } = useAuth()
   const [email, setEmail] = useState('')

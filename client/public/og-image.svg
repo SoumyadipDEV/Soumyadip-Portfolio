@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Portfolio preview">
+  <rect width="1200" height="630" fill="#0A1628"/>
+  <path d="M0 0h1200v630H0z" fill="#0A1628"/>
+  <path d="M105 95h990v440H105z" fill="none" stroke="#C9A84C" stroke-width="6"/>
+  <circle cx="990" cy="150" r="12" fill="#C9A84C"/>
+  <circle cx="210" cy="485" r="10" fill="#C9A84C"/>
+  <text x="150" y="280" fill="#C9A84C" font-family="Arial, Helvetica, sans-serif" font-size="78" font-weight="700">Personal Portfolio</text>
+  <text x="152" y="355" fill="#F3F4F6" font-family="Arial, Helvetica, sans-serif" font-size="34">Software Developer &amp; Technical Support Engineer</text>
+</svg>

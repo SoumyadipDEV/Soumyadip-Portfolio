@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { FiX } from 'react-icons/fi'
 
+/** Accessible modal dialog rendered into a portal. */
 function Modal({ children, isOpen, onClose, title }) {
   useEffect(() => {
     if (!isOpen) {
@@ -35,7 +36,12 @@ function Modal({ children, isOpen, onClose, title }) {
         onClick={onClose}
         type="button"
       />
-      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-lg border border-gray-200 bg-white shadow-2xl dark:border-navy-lighter dark:bg-navy-light">
+      <div
+        aria-label={title}
+        aria-modal="true"
+        className="relative max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-lg border border-gray-200 bg-white shadow-2xl dark:border-navy-lighter dark:bg-navy-light"
+        role="dialog"
+      >
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-navy-lighter">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
           <button

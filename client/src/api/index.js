@@ -1,5 +1,14 @@
 export { default as api } from './axiosInstance'
 export {
+  deleteMessage,
+  getContactMessages as getAdminContactMessages,
+  getResumeUrl,
+  markMessageAsRead,
+  uploadProfileImage,
+  uploadResume,
+  uploadThumbnail,
+} from './adminAPI'
+export {
   createCertificate,
   deleteCertificate,
   getCertificates,

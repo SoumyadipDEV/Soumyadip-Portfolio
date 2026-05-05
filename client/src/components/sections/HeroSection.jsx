@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import { FiDownload, FiGithub, FiLinkedin, FiTwitter } from 'react-icons/fi'
 
 import { getPersonalInfo } from '../../api/personalInfoAPI'
-import { getResume } from '../../api/resumeAPI'
+import { downloadLatestResume } from '../../utils/resumeDownload'
 import Badge from '../common/Badge'
 import Button from '../common/Button'
 import EmptyState from '../common/EmptyState'
@@ -29,6 +29,7 @@ const getShortBio = (bio = '') => {
   return `${bio.slice(0, 217)}...`
 }
 
+/** Landing hero populated from public profile data and resume download action. */
 function HeroSection() {
   const [personalInfo, setPersonalInfo] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -94,17 +95,7 @@ function HeroSection() {
     setDownloading(true)
 
     try {
-      const url = await getResume()
-
-      if (!url) {
-        throw new Error('Resume is not available yet')
-      }
-
-      const link = document.createElement('a')
-      link.href = url
-      link.target = '_blank'
-      link.rel = 'noreferrer'
-      link.click()
+      await downloadLatestResume()
     } catch (downloadError) {
       toast.error(downloadError.message || 'Unable to download resume')
     } finally {

@@ -58,6 +58,7 @@ function FieldError({ message }) {
   return <p className="mt-1 text-xs font-medium text-red-500">{message}</p>
 }
 
+/** Public contact section with client-side validation and API submission. */
 function ContactSection() {
   const [personalInfo, setPersonalInfo] = useState(null)
   const [loadingInfo, setLoadingInfo] = useState(true)

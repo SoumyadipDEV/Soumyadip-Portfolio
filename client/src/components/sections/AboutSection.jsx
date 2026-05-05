@@ -14,6 +14,7 @@ const contactFields = [
   { key: 'phone', icon: FiPhone, label: 'Phone' },
 ]
 
+/** Public about section with biography details and quick portfolio facts. */
 function AboutSection() {
   const [personalInfo, setPersonalInfo] = useState(null)
   const [stats, setStats] = useState(null)

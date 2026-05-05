@@ -69,6 +69,7 @@ function ExpandableDescription({ text }) {
   )
 }
 
+/** Public experience timeline with stack badges and expandable detail. */
 function ExperienceSection() {
   const [experience, setExperience] = useState([])
   const [loading, setLoading] = useState(true)

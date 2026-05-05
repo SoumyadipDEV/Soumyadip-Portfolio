@@ -2,6 +2,7 @@ import { FiGithub, FiLinkedin, FiMail, FiTwitter } from 'react-icons/fi'
 
 import { publicNavLinks } from '../../utils/navigationLinks'
 
+/** Footer with social links and section shortcuts sourced from public profile data. */
 function Footer({ personalInfo }) {
   const year = new Date().getFullYear()
   const socialLinks = [

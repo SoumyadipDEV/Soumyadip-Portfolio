@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import Loader from './Loader'
 
+/** Blocks admin routes until a Supabase session has been resolved. */
 function ProtectedRoute({ children }) {
   const { loading, session } = useAuth()
   const location = useLocation()

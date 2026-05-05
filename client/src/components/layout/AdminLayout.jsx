@@ -27,6 +27,7 @@ const getNavClassName = ({ isActive }) =>
       : 'border-transparent text-gray-300 hover:border-gold/50 hover:bg-white/5 hover:text-gold',
   ].join(' ')
 
+/** Sidebar content for the protected admin shell. */
 function Sidebar({ developerName, onClose, onLogout }) {
   return (
     <div className="flex h-full flex-col bg-navy text-gray-100">
@@ -69,6 +70,7 @@ function Sidebar({ developerName, onClose, onLogout }) {
   )
 }
 
+/** Shared admin shell with fixed sidebar, top bar, and nested page outlet. */
 function AdminLayout() {
   const { logout, user } = useAuth()
   const { personalInfo } = usePersonalInfo()

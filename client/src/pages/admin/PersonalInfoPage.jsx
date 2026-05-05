@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 
+import { uploadProfileImage } from '../../api/adminAPI'
 import { getPersonalInfo, updatePersonalInfo } from '../../api/personalInfoAPI'
 import Button from '../../components/common/Button'
 import Card from '../../components/common/Card'
 import EmptyState from '../../components/common/EmptyState'
 import SkeletonCard from '../../components/common/SkeletonCard'
-import { uploadPublicFile } from '../../utils/storageUpload'
 import {
   errorClassName,
   inputClassName,
@@ -95,7 +95,10 @@ function PersonalInfoPage() {
       let profileImageUrl = formData.profile_image_url
 
       if (profileImageFile) {
-        profileImageUrl = await uploadPublicFile('profile-images', profileImageFile, 'profile')
+        const uploadFormData = new FormData()
+        uploadFormData.append('profile_image', profileImageFile)
+        const uploadResult = await uploadProfileImage(uploadFormData)
+        profileImageUrl = uploadResult.url
       }
 
       await updatePersonalInfo({

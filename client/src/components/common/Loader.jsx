@@ -1,3 +1,4 @@
+/** Small inline loader used while route or data checks are running. */
 function Loader({ label = 'Loading' }) {
   return (
     <div className="flex min-h-40 items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400">

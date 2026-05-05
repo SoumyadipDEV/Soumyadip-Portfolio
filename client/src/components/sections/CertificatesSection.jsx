@@ -33,6 +33,7 @@ const formatMonthYear = (value) => {
   }).format(date)
 }
 
+/** Public certificates showcase with horizontal browsing and credential links. */
 function CertificatesSection() {
   const [certificates, setCertificates] = useState([])
   const [loading, setLoading] = useState(true)

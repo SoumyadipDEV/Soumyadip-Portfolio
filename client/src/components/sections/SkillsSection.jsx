@@ -32,6 +32,7 @@ const clampPercentage = (value) => {
   return Math.min(Math.max(number, 0), 100)
 }
 
+/** Public skills section with category filtering and animated proficiency bars. */
 function SkillsSection() {
   const sectionRef = useRef(null)
   const [skillGroups, setSkillGroups] = useState({})

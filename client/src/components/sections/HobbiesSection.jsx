@@ -5,6 +5,7 @@ import EmptyState from '../common/EmptyState'
 import SkeletonCard from '../common/SkeletonCard'
 import SectionShell from './SectionShell'
 
+/** Public hobbies grid with lightweight visual emphasis. */
 function HobbiesSection() {
   const [hobbies, setHobbies] = useState([])
   const [loading, setLoading] = useState(true)

@@ -4,8 +4,8 @@ import {
   getProjects,
   updateProject,
 } from '../../api/projectsAPI'
+import { uploadThumbnail } from '../../api/adminAPI'
 import TagInput from '../../components/common/TagInput'
-import { uploadPublicFile } from '../../utils/storageUpload'
 import AdminCrudPage from './AdminCrudPage'
 import {
   inputClassName,
@@ -112,7 +112,10 @@ function ProjectsPage() {
         let thumbnailUrl = data.thumbnail_url
 
         if (data.thumbnail_file) {
-          thumbnailUrl = await uploadPublicFile('thumbnails', data.thumbnail_file, 'project')
+          const uploadFormData = new FormData()
+          uploadFormData.append('thumbnail', data.thumbnail_file)
+          const uploadResult = await uploadThumbnail(uploadFormData)
+          thumbnailUrl = uploadResult.url
         }
 
         return {

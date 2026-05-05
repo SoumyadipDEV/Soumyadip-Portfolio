@@ -22,6 +22,7 @@ const getInitials = (title = '') =>
     .join('')
     .toUpperCase() || 'PR'
 
+/** Public project gallery with featured filtering and external links. */
 function ProjectsSection() {
   const [projects, setProjects] = useState([])
   const [activeTab, setActiveTab] = useState('all')

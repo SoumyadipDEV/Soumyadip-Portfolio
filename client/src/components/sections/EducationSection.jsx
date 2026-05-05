@@ -23,6 +23,7 @@ const formatEducationYears = (startYear, endYear) => {
   return 'Dates unavailable'
 }
 
+/** Public education timeline with alternating timeline cards. */
 function EducationSection() {
   const [education, setEducation] = useState([])
   const [loading, setLoading] = useState(true)
