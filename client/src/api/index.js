@@ -1,6 +1,7 @@
 export { default as api } from './axiosInstance'
 export {
   deleteMessage,
+  deleteResume,
   getContactMessages as getAdminContactMessages,
   getResumeUrl,
   markMessageAsRead,

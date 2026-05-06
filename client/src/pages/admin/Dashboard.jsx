@@ -10,6 +10,7 @@ import Button from '../../components/common/Button'
 import EmptyState from '../../components/common/EmptyState'
 import SkeletonCard from '../../components/common/SkeletonCard'
 import { useAuth } from '../../hooks/useAuth'
+import { getAuthDisplayName } from '../../utils/authUser'
 
 const countSkills = (skillsData) => {
   if (Array.isArray(skillsData)) {
@@ -46,6 +47,7 @@ const formatReceivedAt = (value) => {
 /** Admin landing page with portfolio counts and unread message preview. */
 function Dashboard() {
   const { user } = useAuth()
+  const authDisplayName = getAuthDisplayName(user)
   const [stats, setStats] = useState({
     projects: 0,
     certificates: 0,
@@ -101,7 +103,7 @@ function Dashboard() {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
-            Welcome back, {user?.email}
+            Welcome back, {authDisplayName}
           </h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Review portfolio content and unread contact activity.

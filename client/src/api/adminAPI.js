@@ -68,6 +68,14 @@ export const getResumeUrl = async () => {
   return response.data?.url ?? null
 }
 
+export const deleteResume = async () => {
+  const response = await api.delete('/resume', {
+    skipGlobalErrorHandler: true,
+  })
+
+  return response.data
+}
+
 export const uploadProfileImage = async (formData) => {
   const file = getFileFromFormData(formData, ['profile_image', 'profileImage', 'file'])
   const url = await uploadPublicFile('profile-images', file, 'profile')

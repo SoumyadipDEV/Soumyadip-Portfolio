@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
-import { FiAward, FiBookOpen, FiBriefcase, FiFileText, FiGrid, FiHeart, FiHome, FiLogOut, FiMenu, FiMessageSquare, FiUser, FiX, FiZap } from 'react-icons/fi'
+import { FiAward, FiBookOpen, FiBriefcase, FiChevronLeft, FiChevronRight, FiFileText, FiGrid, FiHeart, FiHome, FiLogOut, FiMenu, FiMessageSquare, FiUser, FiX, FiZap } from 'react-icons/fi'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 
 import { useAuth } from '../../hooks/useAuth'
 import { usePersonalInfo } from '../../hooks/usePersonalInfo'
+import { getAuthDisplayName } from '../../utils/authUser'
 
 const adminLinks = [
   { icon: FiHome, label: 'Dashboard', to: '/admin/dashboard' },
@@ -19,23 +20,45 @@ const adminLinks = [
   { icon: FiMessageSquare, label: 'Messages', to: '/admin/messages' },
 ]
 
-const getNavClassName = ({ isActive }) =>
+const getNavClassName = ({ isActive }, isCollapsed = false) =>
   [
-    'flex items-center gap-3 border-l-4 px-4 py-3 text-sm font-semibold transition',
+    'flex items-center border-l-4 py-3 text-sm font-semibold transition',
+    isCollapsed ? 'justify-center px-0' : 'gap-3 px-4',
     isActive
       ? 'border-gold bg-white/10 text-gold'
       : 'border-transparent text-gray-300 hover:border-gold/50 hover:bg-white/5 hover:text-gold',
   ].join(' ')
 
 /** Sidebar content for the protected admin shell. */
-function Sidebar({ developerName, onClose, onLogout }) {
+function Sidebar({ developerName, isCollapsed = false, onClose, onCollapseToggle, onLogout }) {
+  const collapseLabel = isCollapsed ? 'Expand admin navigation' : 'Collapse admin navigation'
+  const CollapseIcon = isCollapsed ? FiChevronRight : FiChevronLeft
+
   return (
     <div className="flex h-full flex-col bg-navy text-gray-100">
-      <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
-        <a className="text-lg font-bold text-gold" href="/admin/dashboard">
-          {developerName}
-        </a>
-        {onClose ? (
+      <div
+        className={[
+          'flex h-16 items-center border-b border-white/10',
+          isCollapsed ? 'justify-center px-2' : 'justify-between px-5',
+        ].join(' ')}
+      >
+        {isCollapsed ? null : (
+          <a className="min-w-0 truncate text-lg font-bold text-gold" href="/admin/dashboard">
+            {developerName}
+          </a>
+        )}
+        {onCollapseToggle ? (
+          <button
+            aria-expanded={!isCollapsed}
+            aria-label={collapseLabel}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-gray-300 transition hover:bg-white/10 hover:text-gold"
+            onClick={onCollapseToggle}
+            title={collapseLabel}
+            type="button"
+          >
+            <CollapseIcon aria-hidden="true" />
+          </button>
+        ) : onClose ? (
           <button
             aria-label="Close admin navigation"
             className="inline-flex h-10 w-10 items-center justify-center rounded-md text-gray-300 hover:bg-white/10 hover:text-gold lg:hidden"
@@ -49,21 +72,31 @@ function Sidebar({ developerName, onClose, onLogout }) {
 
       <nav className="flex-1 overflow-y-auto py-4">
         {adminLinks.map(({ icon: Icon, label, to }) => (
-          <NavLink className={getNavClassName} key={to} onClick={onClose} to={to}>
-            <Icon aria-hidden="true" className="h-4 w-4" />
-            {label}
+          <NavLink
+            className={(navState) => getNavClassName(navState, isCollapsed)}
+            key={to}
+            onClick={onClose}
+            title={isCollapsed ? label : undefined}
+            to={to}
+          >
+            <Icon aria-hidden="true" className="h-4 w-4 shrink-0" />
+            <span className={isCollapsed ? 'sr-only' : ''}>{label}</span>
           </NavLink>
         ))}
       </nav>
 
       <div className="border-t border-white/10 p-4">
         <button
-          className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-sm font-semibold text-gray-300 transition hover:bg-white/10 hover:text-gold"
+          className={[
+            'flex w-full items-center rounded-md py-3 text-sm font-semibold text-gray-300 transition hover:bg-white/10 hover:text-gold',
+            isCollapsed ? 'justify-center px-0' : 'gap-3 px-4',
+          ].join(' ')}
           onClick={onLogout}
+          title={isCollapsed ? 'Logout' : undefined}
           type="button"
         >
-          <FiLogOut aria-hidden="true" />
-          Logout
+          <FiLogOut aria-hidden="true" className="shrink-0" />
+          <span className={isCollapsed ? 'sr-only' : ''}>Logout</span>
         </button>
       </div>
     </div>
@@ -74,11 +107,13 @@ function Sidebar({ developerName, onClose, onLogout }) {
 function AdminLayout() {
   const { logout, user } = useAuth()
   const { personalInfo } = usePersonalInfo()
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
 
   const developerName = personalInfo?.full_name || 'Portfolio Admin'
+  const authDisplayName = getAuthDisplayName(user)
 
   const pageTitle = useMemo(() => {
     const activeLink = adminLinks.find((link) => location.pathname === link.to)
@@ -96,8 +131,18 @@ function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 dark:bg-navy dark:text-gray-100">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 lg:block">
-        <Sidebar developerName={developerName} onLogout={handleLogout} />
+      <aside
+        className={[
+          'fixed inset-y-0 left-0 z-40 hidden transition-[width] duration-200 lg:block',
+          isSidebarCollapsed ? 'w-20' : 'w-72',
+        ].join(' ')}
+      >
+        <Sidebar
+          developerName={developerName}
+          isCollapsed={isSidebarCollapsed}
+          onCollapseToggle={() => setIsSidebarCollapsed((current) => !current)}
+          onLogout={handleLogout}
+        />
       </aside>
 
       {isSidebarOpen ? (
@@ -118,7 +163,12 @@ function AdminLayout() {
         </div>
       ) : null}
 
-      <div className="lg:pl-72">
+      <div
+        className={[
+          'transition-[padding] duration-200',
+          isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72',
+        ].join(' ')}
+      >
         <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur dark:border-navy-lighter dark:bg-navy-light/95">
           <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
@@ -140,7 +190,7 @@ function AdminLayout() {
 
             <div className="min-w-0 text-right">
               <p className="truncate text-sm font-medium text-gray-800 dark:text-gray-100">
-                {user?.email}
+                {authDisplayName}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Signed in</p>
             </div>

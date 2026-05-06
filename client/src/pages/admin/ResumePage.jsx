@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { FiDownload, FiEye, FiFileText, FiInfo, FiUploadCloud } from 'react-icons/fi'
+import { FiDownload, FiEye, FiFileText, FiInfo, FiTrash2, FiUploadCloud } from 'react-icons/fi'
 
-import { getResumeUrl, uploadResume } from '../../api/adminAPI'
+import { deleteResume, getResumeUrl, uploadResume } from '../../api/adminAPI'
 import Button from '../../components/common/Button'
 import Card from '../../components/common/Card'
+import ConfirmDialog from '../../components/common/ConfirmDialog'
 import EmptyState from '../../components/common/EmptyState'
 import SkeletonCard from '../../components/common/SkeletonCard'
 
@@ -67,6 +68,8 @@ function ResumePage() {
   const [dragActive, setDragActive] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -176,6 +179,26 @@ function ResumePage() {
     link.click()
   }
 
+  const handleDelete = async () => {
+    if (!resumeUrl) {
+      setDeleteDialogOpen(false)
+      return
+    }
+
+    setDeleting(true)
+
+    try {
+      await deleteResume()
+      setResumeUrl(null)
+      setDeleteDialogOpen(false)
+      toast.success('Resume deleted.')
+    } catch (deleteError) {
+      toast.error(deleteError.response?.data?.message || deleteError.message || 'Delete failed')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -231,6 +254,15 @@ function ResumePage() {
                   <Button onClick={handleDownload} variant="outline">
                     <FiDownload aria-hidden="true" />
                     Download
+                  </Button>
+                  <Button
+                    className="border-red-600 text-red-500 hover:bg-red-600 hover:text-white dark:border-red-500 dark:text-red-400"
+                    disabled={deleting}
+                    onClick={() => setDeleteDialogOpen(true)}
+                    variant="outline"
+                  >
+                    <FiTrash2 aria-hidden="true" />
+                    Delete
                   </Button>
                 </div>
               ) : null}
@@ -324,6 +356,15 @@ function ResumePage() {
               </Button>
             </div>
           </Card>
+
+          <ConfirmDialog
+            isOpen={deleteDialogOpen}
+            loading={deleting}
+            message={`Delete ${getResumeFileName(resumeUrl)}? This removes the public resume download and cannot be undone.`}
+            onCancel={() => setDeleteDialogOpen(false)}
+            onConfirm={handleDelete}
+            title="Delete resume"
+          />
         </>
       )}
     </div>
