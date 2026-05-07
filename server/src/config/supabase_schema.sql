@@ -149,7 +149,23 @@ CREATE TABLE IF NOT EXISTS public.contact_messages (
   subject text,
   message text NOT NULL,
   is_read boolean NOT NULL DEFAULT false,
+  is_replied boolean DEFAULT false,
+  replied_at timestamptz DEFAULT NULL,
   received_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.contact_messages
+  ADD COLUMN IF NOT EXISTS is_replied boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS replied_at timestamptz DEFAULT NULL;
+
+CREATE TABLE IF NOT EXISTS public.message_replies (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  message_id uuid NOT NULL REFERENCES public.contact_messages(id) ON DELETE CASCADE,
+  reply_body text NOT NULL,
+  replied_to_email text NOT NULL,
+  replied_to_name text NOT NULL,
+  original_subject text,
+  sent_at timestamptz DEFAULT now()
 );
 
 CREATE OR REPLACE FUNCTION public.set_updated_at()
@@ -190,6 +206,12 @@ ON public.contact_messages (received_at DESC);
 CREATE INDEX IF NOT EXISTS contact_messages_is_read_idx
 ON public.contact_messages (is_read);
 
+CREATE INDEX IF NOT EXISTS contact_messages_is_replied_idx
+ON public.contact_messages (is_replied);
+
+CREATE INDEX IF NOT EXISTS message_replies_message_id_sent_at_idx
+ON public.message_replies (message_id, sent_at);
+
 ALTER TABLE public.personal_info ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.education ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.experience ENABLE ROW LEVEL SECURITY;
@@ -198,6 +220,7 @@ ALTER TABLE public.certificates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.skills ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.hobbies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.message_replies ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public can read personal_info" ON public.personal_info;
 CREATE POLICY "Public can read personal_info"
@@ -431,6 +454,27 @@ FOR DELETE
 TO authenticated
 USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can read message_replies" ON public.message_replies;
+CREATE POLICY "Authenticated users can read message_replies"
+ON public.message_replies
+FOR SELECT
+TO authenticated
+USING (true);
+
+DROP POLICY IF EXISTS "Authenticated users can insert message_replies" ON public.message_replies;
+CREATE POLICY "Authenticated users can insert message_replies"
+ON public.message_replies
+FOR INSERT
+TO authenticated
+WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Authenticated users can delete message_replies" ON public.message_replies;
+CREATE POLICY "Authenticated users can delete message_replies"
+ON public.message_replies
+FOR DELETE
+TO authenticated
+USING (true);
+
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 
 GRANT SELECT ON
@@ -443,7 +487,10 @@ GRANT SELECT ON
   public.hobbies
 TO anon, authenticated;
 
-GRANT SELECT ON public.contact_messages TO authenticated;
+GRANT SELECT ON
+  public.contact_messages,
+  public.message_replies
+TO authenticated;
 
 GRANT INSERT, UPDATE, DELETE ON
   public.personal_info,
@@ -457,3 +504,5 @@ GRANT INSERT, UPDATE, DELETE ON
 TO authenticated;
 
 GRANT INSERT ON public.contact_messages TO anon;
+
+GRANT INSERT, DELETE ON public.message_replies TO authenticated;

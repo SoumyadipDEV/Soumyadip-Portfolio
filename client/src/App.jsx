@@ -15,6 +15,7 @@ import PersonalInfoPage from './pages/admin/PersonalInfoPage'
 import ProjectsPage from './pages/admin/ProjectsPage'
 import ResumePage from './pages/admin/ResumePage'
 import SkillsPage from './pages/admin/SkillsPage'
+import TypewriterRolesPage from './pages/admin/TypewriterRolesPage'
 import Home from './pages/public/Home'
 
 /** Main application route map for public and admin areas. */
@@ -38,6 +39,7 @@ function App() {
           <Route index element={<Navigate replace to="/admin/dashboard" />} />
           <Route element={<Dashboard />} path="dashboard" />
           <Route element={<PersonalInfoPage />} path="personal-info" />
+          <Route element={<TypewriterRolesPage />} path="typewriter-roles" />
           <Route element={<EducationPage />} path="education" />
           <Route element={<ExperiencePage />} path="experience" />
           <Route element={<ProjectsPage />} path="projects" />

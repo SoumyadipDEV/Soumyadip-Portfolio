@@ -47,6 +47,26 @@ export const deleteMessage = async (id) => {
   return response.data
 }
 
+export const sendReply = async (messageId, replyBody) => {
+  const response = await api.post(
+    `/contact/messages/${messageId}/reply`,
+    { replyBody },
+    {
+      skipGlobalErrorHandler: true,
+    },
+  )
+
+  return response.data
+}
+
+export const getMessageReplies = async (messageId) => {
+  const response = await api.get(`/contact/messages/${messageId}/replies`, {
+    skipGlobalErrorHandler: true,
+  })
+
+  return response.data?.data ?? []
+}
+
 export const uploadResume = async (formData, config = {}) => {
   const response = await api.post('/resume/upload', formData, {
     ...config,

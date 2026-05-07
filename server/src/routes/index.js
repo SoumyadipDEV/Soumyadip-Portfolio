@@ -9,6 +9,7 @@ import personalInfoRoutes from './personalInfo.js';
 import projectsRoutes from './projects.js';
 import resumeRoutes from './resume.js';
 import skillsRoutes from './skills.js';
+import typewriterRoutes from './typewriter.js';
 
 const router = Router();
 
@@ -21,5 +22,6 @@ router.use('/skills', skillsRoutes);
 router.use('/hobbies', hobbiesRoutes);
 router.use('/contact', contactRoutes);
 router.use('/resume', resumeRoutes);
+router.use('/typewriter-roles', typewriterRoutes);
 
 export default router;

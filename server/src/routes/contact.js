@@ -4,7 +4,9 @@ import { body, param } from 'express-validator';
 import {
   deleteContactMessage,
   getContactMessages,
+  getMessageReplies,
   markMessageAsRead,
+  replyToContactMessage,
   sendContactMessage,
 } from '../controllers/contactController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
@@ -25,6 +27,27 @@ router.post(
 );
 
 router.get('/messages', authMiddleware, getContactMessages);
+router.post(
+  '/messages/:id/reply',
+  authMiddleware,
+  idValidator,
+  body('replyBody')
+    .isString()
+    .withMessage('Reply body is required')
+    .bail()
+    .trim()
+    .notEmpty()
+    .withMessage('Reply body is required'),
+  validateRequest,
+  replyToContactMessage,
+);
+router.get(
+  '/messages/:id/replies',
+  authMiddleware,
+  idValidator,
+  validateRequest,
+  getMessageReplies,
+);
 router.put(
   '/messages/:id/read',
   authMiddleware,

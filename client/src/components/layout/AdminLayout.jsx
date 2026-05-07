@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { FiAward, FiBookOpen, FiBriefcase, FiChevronLeft, FiChevronRight, FiFileText, FiGrid, FiHeart, FiHome, FiLogOut, FiMenu, FiMessageSquare, FiUser, FiX, FiZap } from 'react-icons/fi'
+import { MdOutlineAnimation } from 'react-icons/md'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 
@@ -10,6 +11,7 @@ import { getAuthDisplayName } from '../../utils/authUser'
 const adminLinks = [
   { icon: FiHome, label: 'Dashboard', to: '/admin/dashboard' },
   { icon: FiUser, label: 'Personal Info', to: '/admin/personal-info' },
+  { icon: MdOutlineAnimation, label: 'Typewriter Roles', to: '/admin/typewriter-roles' },
   { icon: FiBookOpen, label: 'Education', to: '/admin/education' },
   { icon: FiBriefcase, label: 'Experience', to: '/admin/experience' },
   { icon: FiGrid, label: 'Projects', to: '/admin/projects' },

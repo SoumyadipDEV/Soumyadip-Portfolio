@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { FiEye, FiTrash2 } from 'react-icons/fi'
+import { FiEye, FiSend, FiTrash2 } from 'react-icons/fi'
 
-import { deleteMessage, getContactMessages, markMessageAsRead } from '../../api/adminAPI'
+import {
+  deleteMessage,
+  getContactMessages,
+  getMessageReplies,
+  markMessageAsRead,
+} from '../../api/adminAPI'
+import ReplyModal from '../../components/admin/ReplyModal'
 import Button from '../../components/common/Button'
 import Card from '../../components/common/Card'
 import ConfirmDialog from '../../components/common/ConfirmDialog'
@@ -37,6 +43,10 @@ function MessagesPage() {
   const [messages, setMessages] = useState([])
   const [activeFilter, setActiveFilter] = useState('All')
   const [selectedMessage, setSelectedMessage] = useState(null)
+  const [selectedMessageReplies, setSelectedMessageReplies] = useState([])
+  const [repliesLoading, setRepliesLoading] = useState(false)
+  const [replyModalOpen, setReplyModalOpen] = useState(false)
+  const [selectedMessageForReply, setSelectedMessageForReply] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -68,24 +78,63 @@ function MessagesPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!selectedMessage?.id) {
+      return undefined
+    }
+
+    let ignore = false
+
+    const loadReplies = async () => {
+      setRepliesLoading(true)
+
+      try {
+        const replies = await getMessageReplies(selectedMessage.id)
+
+        if (!ignore) {
+          setSelectedMessageReplies(replies)
+        }
+      } catch (replyError) {
+        if (!ignore) {
+          setSelectedMessageReplies([])
+          toast.error(
+            replyError.response?.data?.message || replyError.message || 'Unable to load replies',
+          )
+        }
+      } finally {
+        if (!ignore) {
+          setRepliesLoading(false)
+        }
+      }
+    }
+
+    loadReplies()
+
+    return () => {
+      ignore = true
+    }
+  }, [selectedMessage?.id])
+
   const unreadCount = useMemo(
-    () => messages.filter((message) => !message.is_read).length,
+    () => messages.filter((message) => !message.is_read && !message.is_replied).length,
     [messages],
   )
 
   const visibleMessages = useMemo(() => {
     if (activeFilter === 'Unread') {
-      return messages.filter((message) => !message.is_read)
+      return messages.filter((message) => !message.is_read && !message.is_replied)
     }
 
     if (activeFilter === 'Read') {
-      return messages.filter((message) => message.is_read)
+      return messages.filter((message) => message.is_read || message.is_replied)
     }
 
     return messages
   }, [activeFilter, messages])
 
   const handleView = async (message) => {
+    setSelectedMessageReplies([])
+    setRepliesLoading(true)
     setSelectedMessage(message)
 
     if (message.is_read) {
@@ -107,6 +156,39 @@ function MessagesPage() {
     }
   }
 
+  const openReplyModal = (message) => {
+    setSelectedMessageForReply(message)
+    setReplyModalOpen(true)
+  }
+
+  const closeReplyModal = () => {
+    setReplyModalOpen(false)
+    setSelectedMessageForReply(null)
+  }
+
+  const closeViewModal = () => {
+    setSelectedMessage(null)
+    setSelectedMessageReplies([])
+    setRepliesLoading(false)
+  }
+
+  const handleReplySent = (messageId) => {
+    const repliedAt = new Date().toISOString()
+
+    setMessages((current) =>
+      current.map((message) =>
+        message.id === messageId
+          ? { ...message, is_replied: true, replied_at: repliedAt, is_read: true }
+          : message,
+      ),
+    )
+    setSelectedMessage((current) =>
+      current?.id === messageId
+        ? { ...current, is_replied: true, replied_at: repliedAt, is_read: true }
+        : current,
+    )
+  }
+
   const handleDelete = async () => {
     if (!deleteTarget) {
       return
@@ -118,7 +200,11 @@ function MessagesPage() {
       await deleteMessage(deleteTarget.id)
       setMessages((current) => current.filter((message) => message.id !== deleteTarget.id))
       if (selectedMessage?.id === deleteTarget.id) {
-        setSelectedMessage(null)
+        closeViewModal()
+      }
+      if (selectedMessageForReply?.id === deleteTarget.id) {
+        setSelectedMessageForReply(null)
+        setReplyModalOpen(false)
       }
       setDeleteTarget(null)
       toast.success('Message deleted.')
@@ -179,8 +265,12 @@ function MessagesPage() {
           {visibleMessages.length ? (
             <div className="grid gap-4">
               {visibleMessages.map((message) => (
-                <Card className="relative" key={message.id}>
-                  {!message.is_read ? (
+                <Card className={`relative ${message.is_replied ? 'pt-10' : ''}`} key={message.id}>
+                  {message.is_replied ? (
+                    <span className="absolute left-4 top-4 rounded-full bg-[#1a472a] px-2 py-0.5 text-[11px] font-semibold text-white">
+                      ✓ Replied
+                    </span>
+                  ) : !message.is_read ? (
                     <span
                       aria-label="Unread"
                       className="absolute right-4 top-4 h-3 w-3 rounded-full bg-gold"
@@ -212,6 +302,10 @@ function MessagesPage() {
                         <FiEye aria-hidden="true" />
                         View
                       </Button>
+                      <Button onClick={() => openReplyModal(message)} size="sm" variant="outline">
+                        <FiSend aria-hidden="true" />
+                        Reply
+                      </Button>
                       <Button
                         className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
                         onClick={() => setDeleteTarget(message)}
@@ -237,7 +331,7 @@ function MessagesPage() {
 
       <Modal
         isOpen={Boolean(selectedMessage)}
-        onClose={() => setSelectedMessage(null)}
+        onClose={closeViewModal}
         title={selectedMessage?.subject || 'Contact Message'}
       >
         {selectedMessage ? (
@@ -258,9 +352,44 @@ function MessagesPage() {
                 {selectedMessage.message}
               </p>
             </div>
+            {repliesLoading ? (
+              <p className="border-t border-gray-200 pt-4 text-sm text-gray-500 dark:border-navy-lighter dark:text-gray-400">
+                Loading replies...
+              </p>
+            ) : selectedMessageReplies.length ? (
+              <div className="border-t border-gray-200 pt-4 dark:border-navy-lighter">
+                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Replies</h3>
+                <div className="mt-3 space-y-3">
+                  {selectedMessageReplies.map((reply) => (
+                    <div
+                      className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-navy-lighter dark:bg-navy"
+                      key={reply.id}
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gold">
+                        You replied:
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-800 dark:text-gray-100">
+                        {reply.reply_body}
+                      </p>
+                      <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                        {formatDateTime(reply.sent_at)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </Modal>
+
+      <ReplyModal
+        isOpen={replyModalOpen}
+        key={selectedMessageForReply?.id || 'reply-modal'}
+        message={selectedMessageForReply}
+        onClose={closeReplyModal}
+        onReplySent={handleReplySent}
+      />
 
       <ConfirmDialog
         isOpen={Boolean(deleteTarget)}

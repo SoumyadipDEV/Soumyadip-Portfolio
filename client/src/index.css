@@ -17,3 +17,18 @@
     font: inherit;
   }
 }
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.cursor {
+  animation: blink 0.8s infinite;
+  color: #C9A84C;
+}
+

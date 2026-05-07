@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { FiDownload, FiGithub, FiLinkedin, FiTwitter } from 'react-icons/fi'
 
 import { getPersonalInfo } from '../../api/personalInfoAPI'
+import { getTypewriterRoles } from '../../api/typewriterAPI'
 import { downloadLatestResume } from '../../utils/resumeDownload'
 import Badge from '../common/Badge'
 import Button from '../common/Button'
@@ -11,6 +12,7 @@ import EmptyState from '../common/EmptyState'
 import SkeletonCard from '../common/SkeletonCard'
 
 const fallbackTagline = 'Software Developer & Technical Support Engineer'
+const fallbackRoles = ['Software Developer', 'Technical Support Engineer', 'AX Developer']
 
 const getInitials = (name = '') =>
   name
@@ -34,28 +36,43 @@ function HeroSection() {
   const [personalInfo, setPersonalInfo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [typedTagline, setTypedTagline] = useState('')
+  const [roles, setRoles] = useState([])
+  const [currentText, setCurrentText] = useState('')
   const [downloading, setDownloading] = useState(false)
+
+  // Use refs to avoid stale closures in the interval
+  const currentRoleIndexRef = useRef(0)
+  const currentTextRef = useRef('')
+  const isDeletingRef = useRef(false)
 
   useEffect(() => {
     let isMounted = true
 
-    getPersonalInfo()
-      .then((data) => {
+    const loadData = async () => {
+      try {
+        const [personalData, rolesData] = await Promise.all([
+          getPersonalInfo(),
+          getTypewriterRoles(),
+        ])
+
         if (isMounted) {
-          setPersonalInfo(data)
+          setPersonalInfo(personalData)
+          setRoles(rolesData && rolesData.length > 0 ? rolesData : fallbackRoles)
         }
-      })
-      .catch((requestError) => {
+      } catch (requestError) {
         if (isMounted) {
           setError(requestError)
+          // Fall back to default roles even if API fails
+          setRoles(fallbackRoles)
         }
-      })
-      .finally(() => {
+      } finally {
         if (isMounted) {
           setLoading(false)
         }
-      })
+      }
+    }
+
+    loadData()
 
     return () => {
       isMounted = false
@@ -64,22 +81,60 @@ function HeroSection() {
 
   const tagline = personalInfo?.tagline || fallbackTagline
 
+  // Typewriter animation for cycling through roles
   useEffect(() => {
-    let index = 0
+    if (!roles || roles.length === 0) {
+      return
+    }
 
-    const intervalId = window.setInterval(() => {
-      index += 1
-      setTypedTagline(tagline.slice(0, index))
+    let intervalId
 
-      if (index >= tagline.length) {
-        window.clearInterval(intervalId)
+    const animate = () => {
+      const currentRoleIndex = currentRoleIndexRef.current
+      const currentRole = roles[currentRoleIndex]?.role_text || ''
+      let currentText = currentTextRef.current
+      let isDeleting = isDeletingRef.current
+
+      const TYPING_SPEED = 80
+      const ERASING_SPEED = 40
+      const PAUSE_DURATION = 1500
+
+      if (!isDeleting) {
+        // Typing phase
+        if (currentText.length < currentRole.length) {
+          currentText = currentRole.slice(0, currentText.length + 1)
+          currentTextRef.current = currentText
+          setCurrentText(currentText)
+          intervalId = window.setTimeout(animate, TYPING_SPEED)
+        } else {
+          // Finished typing, pause before erasing
+          isDeletingRef.current = true
+          intervalId = window.setTimeout(animate, PAUSE_DURATION)
+        }
+      } else {
+        // Erasing phase
+        if (currentText.length > 0) {
+          currentText = currentText.slice(0, currentText.length - 1)
+          currentTextRef.current = currentText
+          setCurrentText(currentText)
+          intervalId = window.setTimeout(animate, ERASING_SPEED)
+        } else {
+          // Finished erasing, move to next role
+          currentRoleIndexRef.current = (currentRoleIndex + 1) % roles.length
+          isDeletingRef.current = false
+          intervalId = window.setTimeout(animate, 300)
+        }
       }
-    }, 55)
+    }
+
+    animate()
 
     return () => {
-      window.clearInterval(intervalId)
+      if (intervalId) {
+        window.clearTimeout(intervalId)
+      }
     }
-  }, [tagline])
+  }, [roles])
 
   const socialLinks = useMemo(
     () =>
@@ -148,9 +203,10 @@ function HeroSection() {
               <h1 className="mt-3 text-5xl font-bold text-gray-800 sm:text-7xl dark:text-gray-100">
                 {fullName}
               </h1>
-              <p aria-label={tagline} className="mt-5 min-h-8 text-2xl font-semibold text-gold">
-                {typedTagline}
-                <span className="ml-1 inline-block animate-pulse text-gold">|</span>
+              <p className="mt-5 min-h-8 text-2xl font-semibold text-gold">
+                <span>I am a </span>
+                <span>{currentText}</span>
+                <span className="cursor">|</span>
               </p>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-gray-500 dark:text-gray-400">
                 {shortBio}
